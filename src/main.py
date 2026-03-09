@@ -1,18 +1,23 @@
 import os
 import shutil
 from util import generate_pages_recursive
+import sys
 
-public_filepath = "./public"
+docs_filepath = "./docs"
 static_filepath = "./static"
+basepath = "/"
+
+if len(sys.argv) > 1:
+    basepath = sys.argv[1]
 
 def main():
-  if os.path.exists(public_filepath):
-    shutil.rmtree(public_filepath)
-    os.mkdir(public_filepath)
+  if os.path.exists(docs_filepath):
+    shutil.rmtree(docs_filepath)
+    os.mkdir(docs_filepath)
   else:    
-    os.mkdir(public_filepath)
-  copy_folder_contents(static_filepath, public_filepath)
-  generate_pages_recursive("content", "template.html", "public")
+    os.mkdir(docs_filepath)
+  copy_folder_contents(static_filepath, docs_filepath)
+  generate_pages_recursive("./content", "./template.html", "./docs", basepath)
 
 def copy_folder_contents(source, destination):
   folder_contents = os.listdir(source)

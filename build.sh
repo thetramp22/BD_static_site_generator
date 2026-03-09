@@ -1,0 +1,1 @@
+python3 src/main.py "/BD_static_site_generator/"
