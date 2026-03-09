@@ -260,5 +260,17 @@ This is an ordered list:
         "<div><p>This is an ordered list:</p><ol><li>first item</li><li>second item</li><li>third item</li></ol></div>",
     )
 
+# extract title
+
+  def test_extract_title(self):
+    md = "# My Title"
+    result = extract_title(md)
+    self.assertEqual(result, "My Title")
+
+  def test_extract_title_no_title(self):
+    md = "This is not a Title"
+    with self.assertRaises(Exception):
+      extract_title(md)
+
 if __name__ == "__main__":
   unittest.main()
