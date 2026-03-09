@@ -1,5 +1,7 @@
 from textnode import *
 import re
+from block import *
+from htmlnode import *
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
   new_nodes = []
@@ -88,3 +90,91 @@ def markdown_to_blocks(markdown):
     if stripped_section != "":
       blocks.append(stripped_section)
   return blocks
+
+def markdown_to_html_node(markdown):
+  blocks = markdown_to_blocks(markdown)
+  new_children = []
+  for block in blocks:
+    block_type = block_to_block_type(block)
+    if block_type == BlockType.CODE:
+      converted_block = markdown_syntax_to_html_syntax(block)
+      code_block_node = text_node_to_html_node(TextNode(converted_block, TextType.CODE))
+      block_node = ParentNode("pre", [code_block_node])
+    else:
+      children = text_to_childern(block)
+      block_node = create_block_html_node(block_type, children)
+      if block_node.tag == "h":
+        block_node.tag += set_heading_type(markdown)
+    new_children.append(block_node)
+  return ParentNode("div", new_children, )
+
+# this function needs to convert  markdown syntax to html syntax before calling text_to_textnodes
+def text_to_childern(text):
+  converted_text = markdown_syntax_to_html_syntax(text)
+  textnodes = text_to_textnodes(converted_text)
+  htmlnodes = []
+  for textnode in textnodes:
+    htmlnode = text_node_to_html_node(textnode)
+    htmlnodes.append(htmlnode)
+  return htmlnodes
+
+def create_block_html_node(block_type, children):
+  match block_type:
+    case BlockType.QUOTE:
+      return ParentNode("blockquote", children)
+    case BlockType.UNORDERED_LIST:
+      return ParentNode("ul", children)
+    case BlockType.ORDERED_LIST:      
+      return ParentNode("ol", children)
+    case BlockType.CODE:
+      return ParentNode("code", children)
+    case BlockType.HEADING:
+      return ParentNode("h", children)
+    case BlockType.PARAGRAPH:
+      return ParentNode("p", children)
+
+def markdown_syntax_to_html_syntax(markdown):
+  block_type = block_to_block_type(markdown)
+  match block_type:
+    case BlockType.QUOTE:
+      lines = markdown.split("\n")
+      new_lines = []
+      for line in lines:
+        markdown_removed = line[2:]
+        new_lines.append(markdown_removed)
+      new_block = " ".join(new_lines)
+      return new_block
+    case BlockType.UNORDERED_LIST:
+      lines = markdown.split("\n")
+      new_lines = []
+      for line in lines:
+        markdown_removed = line[2:]
+        html_added = "<li>" + markdown_removed + "</li>"
+        new_lines.append(html_added)
+      new_block = "".join(new_lines)
+      return new_block
+    case BlockType.ORDERED_LIST:
+      lines = markdown.split("\n")
+      new_lines = []
+      for line in lines:
+        markdown_removed = line[3:]
+        html_added = "<li>" + markdown_removed + "</li>"
+        new_lines.append(html_added)
+      new_block = "".join(new_lines)
+      return new_block
+    case BlockType.HEADING:
+      heading_parts = markdown.split(" ", maxsplit=1)
+      return heading_parts[1]
+    case BlockType.PARAGRAPH:
+      return markdown.replace("\n", " ")
+    case BlockType.CODE:
+      lines = markdown.split("\n")
+      new_block = "\n".join(lines[1:-1])
+      new_block += "\n"
+      return new_block
+    
+def set_heading_type(markdown):
+      heading_parts = markdown.split(" ", maxsplit=1)
+      heading_syntax = heading_parts[0]
+      heading_type = len(heading_syntax)
+      return heading_type
